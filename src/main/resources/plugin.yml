@@ -2,3 +2,5 @@ name: EnemyDown
 version: '${version}'
 main: plugin.enemydown.Main
 api-version: '1.20'
+commands:
+  enemyDown:
