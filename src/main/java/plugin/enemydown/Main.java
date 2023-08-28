@@ -11,4 +11,5 @@ public final class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("enemyDown").setExecutor(new EnemyDownCommand());
     }
+
 }
