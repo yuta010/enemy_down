@@ -1,6 +1,7 @@
 package plugin.enemydown.command;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.SplittableRandom;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,15 +11,20 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-public class EnemyDownCommand implements CommandExecutor {
+public class EnemyDownCommand implements CommandExecutor, Listener {
 
-
+  private Player player;
+  private int score;
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if(sender instanceof Player player){
+      this.player = player;
       World world = player.getWorld();
 
       initPlayerStatus(player);
@@ -26,6 +32,23 @@ public class EnemyDownCommand implements CommandExecutor {
       world.spawnEntity(getEnemySpawnLocation(player, world), getEnemy());
     }
     return false;
+  }
+
+  @EventHandler
+  public void onEnemyDeath(EntityDeathEvent e){
+    Player player = e.getEntity().getKiller();
+    if (Objects.isNull(player)){
+      return;
+    }
+    if (Objects.isNull(this.player)){
+      return;
+    }
+
+
+    if(this.player.getName().equals(player.getName())){
+      score += 10;
+      player.sendMessage("敵を倒した！現在のスコアは" + score + "点!");
+    }
   }
 
   /**
@@ -63,8 +86,7 @@ public class EnemyDownCommand implements CommandExecutor {
     double y = playerLocation.getY();
     double z = playerLocation.getZ() + randomZ;
 
-    Location enemySpawnLocation = new Location(world, x,y,z);
-    return enemySpawnLocation;
+    return new Location(world, x,y,z);
   }
 
   /**
