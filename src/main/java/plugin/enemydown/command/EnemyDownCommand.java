@@ -1,5 +1,6 @@
 package plugin.enemydown.command;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.SplittableRandom;
@@ -16,15 +17,24 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import plugin.enemydown.Data.PlayerScore;
 
 public class EnemyDownCommand implements CommandExecutor, Listener {
 
-  private Player player;
-  private int score;
+  private List<PlayerScore> playerScoreList = new ArrayList<>();
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if(sender instanceof Player player){
-      this.player = player;
+      if(playerScoreList.isEmpty()) {
+        addNewPlayer(player);
+      } else {
+        for(PlayerScore playerScore : playerScoreList){
+          if(!playerScore.getPlayerName().equals(player.getName())){
+            addNewPlayer(player);
+          }
+        }
+      }
+
       World world = player.getWorld();
 
       initPlayerStatus(player);
@@ -37,19 +47,17 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
   @EventHandler
   public void onEnemyDeath(EntityDeathEvent e){
     Player player = e.getEntity().getKiller();
-    if (Objects.isNull(player)){
-      return;
-    }
-    if (Objects.isNull(this.player)){
+    if (Objects.isNull(player) || playerScoreList.isEmpty()) {
       return;
     }
 
-
-    if(this.player.getName().equals(player.getName())){
-      score += 10;
-      player.sendMessage("敵を倒した！現在のスコアは" + score + "点!");
+    for(PlayerScore playerScore : playerScoreList){
+      if (playerScore.getPlayerName().equals(player.getName())){
+        playerScore.setScore(playerScore.getScore() + 10 );
+        player.sendMessage("敵を倒した！現在のスコアは" + playerScore.getScore() + "点!");
+      }
     }
-  }
+    }
 
   /**
    * ゲームを始める前にプレイヤーんの状態を設定する。
@@ -89,6 +97,15 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
     return new Location(world, x,y,z);
   }
 
+  /**
+   * 新規のプレイヤー情報をリストに追加
+   * @param player  コマンドを実行したプレイヤー
+   */
+  private void addNewPlayer(Player player) {
+    PlayerScore newPlayer = new PlayerScore();
+    newPlayer.setPlayerName(player.getName());
+    playerScoreList.add(newPlayer);
+  }
   /**
    * ランダムで敵を抽選して、その結果を取得します。
    *
