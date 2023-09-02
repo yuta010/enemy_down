@@ -25,7 +25,6 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
 
   private  Main main;
   private List<PlayerScore> playerScoreList = new ArrayList<>();
-  private int gameTime = 20;
 
   public EnemyDownCommand(Main main) {
     this.main =main;
@@ -34,34 +33,28 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if(sender instanceof Player player){
-      if(playerScoreList.isEmpty()) {
-        gameTime = 20;
-        addNewPlayer(player);
-      } else {
-        for(PlayerScore playerScore : playerScoreList){
-          if(!playerScore.getPlayerName().equals(player.getName())){
-            addNewPlayer(player);
-          }
-        }
-      }
+      PlayerScore nowPlayer = getPlayerScore(player);
+      nowPlayer.setGameTime(20);
 
       World world = player.getWorld();
 
       initPlayerStatus(player);
 
       Bukkit.getScheduler().runTaskTimer(main,Runnable ->{
-        if(gameTime <= 0) {
+        if(nowPlayer.getGameTime() <= 0) {
           Runnable.cancel();
           player.sendMessage("ゲームは終了しました！");
           return;
         }
         world.spawnEntity(getEnemySpawnLocation(player, world), getEnemy());
         player.sendMessage(getEnemy().name() + "が出現しました！");
-        gameTime -= 5;
+        nowPlayer.setGameTime(nowPlayer.getGameTime() -5 );
       },0,5 * 20);
     }
     return false;
   }
+
+
 
   @EventHandler
   public void onEnemyDeath(EntityDeathEvent e){
@@ -117,13 +110,35 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
   }
 
   /**
+   * 現在実行しているプレイヤーのスコア情報を取得する。
+   * @param player  コマンドを実行したプレイヤー
+   * @return 現在実行しているプレイヤーのスコア情報
+   */
+  private PlayerScore getPlayerScore(Player player) {
+    if(playerScoreList.isEmpty()) {
+      return addNewPlayer(player);
+    } else {
+      for(PlayerScore playerScore : playerScoreList){
+        if(!playerScore.getPlayerName().equals(player.getName())){
+          return addNewPlayer(player);
+        } else{
+          return playerScore;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
    * 新規のプレイヤー情報をリストに追加
    * @param player  コマンドを実行したプレイヤー
-   */
-  private void addNewPlayer(Player player) {
+   * @return  新規プレイヤー
+   * */
+  private PlayerScore addNewPlayer(Player player) {
     PlayerScore newPlayer = new PlayerScore();
     newPlayer.setPlayerName(player.getName());
     playerScoreList.add(newPlayer);
+    return newPlayer;
   }
   /**
    * ランダムで敵を抽選して、その結果を取得します。
