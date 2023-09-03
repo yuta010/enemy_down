@@ -43,7 +43,10 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
       Bukkit.getScheduler().runTaskTimer(main,Runnable ->{
         if(nowPlayer.getGameTime() <= 0) {
           Runnable.cancel();
-          player.sendMessage("ゲームは終了しました！");
+          player.sendTitle("ゲームが終了しました。",
+              nowPlayer.getPlayerName() + " 合計 " + nowPlayer.getScore() + "点!",
+              0,100,0);
+          nowPlayer.setScore(0);
           return;
         }
         world.spawnEntity(getEnemySpawnLocation(player, world), getEnemy());
