@@ -11,6 +11,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -48,6 +49,13 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
               nowPlayer.getPlayerName() + " 合計 " + nowPlayer.getScore() + "点!",
               0,100,0);
           nowPlayer.setScore(0);
+          List<Entity> nearbyEnemies = player.getNearbyEntities(50, 50, 50);
+          for(Entity enemy: nearbyEnemies){
+            switch (enemy.getType()) {
+              case ZOMBIE, SKELETON, WITCH -> enemy.remove();
+            }
+          }
+          player.sendMessage("周囲の敵が消えました");
           return;
         }
         world.spawnEntity(getEnemySpawnLocation(player, world), getEnemy());
@@ -95,7 +103,7 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
     playerInventory.setChestplate(new ItemStack(Material.NETHERITE_CHESTPLATE));
     playerInventory.setLeggings(new ItemStack(Material.NETHERITE_LEGGINGS));
     playerInventory.setBoots(new ItemStack(Material.NETHERITE_BOOTS));
-    playerInventory.setItemInMainHand(new ItemStack(Material.NETHERITE_SWORD));
+    playerInventory.setItemInMainHand(new ItemStack(Material.NETHERITE_AXE));
   }
 
   /**
