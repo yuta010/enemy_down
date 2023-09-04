@@ -12,6 +12,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -61,14 +62,20 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
 
   @EventHandler
   public void onEnemyDeath(EntityDeathEvent e){
-    Player player = e.getEntity().getKiller();
+    LivingEntity enemy = e.getEntity();
+    Player player = enemy.getKiller();
     if (Objects.isNull(player) || playerScoreList.isEmpty()) {
       return;
     }
 
     for(PlayerScore playerScore : playerScoreList){
       if (playerScore.getPlayerName().equals(player.getName())){
-        playerScore.setScore(playerScore.getScore() + 10 );
+        int point = switch (enemy.getType()) {
+          case ZOMBIE -> 10;
+          case SKELETON, WITCH -> 20;
+          default -> 0;
+        };
+        playerScore.setScore(playerScore.getScore() + point);
         player.sendMessage("敵を倒した！現在のスコアは" + playerScore.getScore() + "点!");
       }
     }
@@ -149,7 +156,7 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
    * @return  敵
    */
   private EntityType getEnemy() {
-    List<EntityType> enemyList =List.of(EntityType.ZOMBIE,EntityType.SKELETON);
-    return enemyList.get(new SplittableRandom().nextInt(2));
+    List<EntityType> enemyList =List.of(EntityType.ZOMBIE,EntityType.SKELETON,EntityType.WITCH);
+    return enemyList.get(new SplittableRandom().nextInt(enemyList.size()));
   }
 }
