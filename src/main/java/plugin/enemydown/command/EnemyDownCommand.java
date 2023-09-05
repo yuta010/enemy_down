@@ -8,8 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -23,7 +21,7 @@ import org.bukkit.inventory.PlayerInventory;
 import plugin.enemydown.Data.PlayerScore;
 import plugin.enemydown.Main;
 
-public class EnemyDownCommand implements CommandExecutor, Listener {
+public class EnemyDownCommand extends BaseCommand implements Listener {
 
   private  Main main;
   private List<PlayerScore> playerScoreList = new ArrayList<>();
@@ -32,41 +30,43 @@ public class EnemyDownCommand implements CommandExecutor, Listener {
     this.main =main;
   }
 
+
   @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if(sender instanceof Player player){
-      PlayerScore nowPlayer = getPlayerScore(player);
-      nowPlayer.setGameTime(20);
+  public boolean onExecutePlayerCommand(Player player) {
+    PlayerScore nowPlayer = getPlayerScore(player);
+    nowPlayer.setGameTime(20);
 
-      World world = player.getWorld();
+    World world = player.getWorld();
 
-      initPlayerStatus(player);
+    initPlayerStatus(player);
 
-      Bukkit.getScheduler().runTaskTimer(main,Runnable ->{
-        if(nowPlayer.getGameTime() <= 0) {
-          Runnable.cancel();
-          player.sendTitle("ゲームが終了しました。",
-              nowPlayer.getPlayerName() + " 合計 " + nowPlayer.getScore() + "点!",
-              0,100,0);
-          nowPlayer.setScore(0);
-          List<Entity> nearbyEnemies = player.getNearbyEntities(50, 50, 50);
-          for(Entity enemy: nearbyEnemies){
-            switch (enemy.getType()) {
-              case ZOMBIE, SKELETON, WITCH -> enemy.remove();
-            }
+    Bukkit.getScheduler().runTaskTimer(main,Runnable ->{
+      if(nowPlayer.getGameTime() <= 0) {
+        Runnable.cancel();
+        player.sendTitle("ゲームが終了しました。",
+            nowPlayer.getPlayerName() + " 合計 " + nowPlayer.getScore() + "点!",
+            0,100,0);
+        nowPlayer.setScore(0);
+        List<Entity> nearbyEnemies = player.getNearbyEntities(50, 50, 50);
+        for(Entity enemy: nearbyEnemies){
+          switch (enemy.getType()) {
+            case ZOMBIE, SKELETON, WITCH -> enemy.remove();
           }
-          player.sendMessage("周囲の敵が消えました");
-          return;
         }
-        world.spawnEntity(getEnemySpawnLocation(player, world), getEnemy());
-        player.sendMessage(getEnemy().name() + "が出現しました！");
-        nowPlayer.setGameTime(nowPlayer.getGameTime() -5 );
-      },0,5 * 20);
-    }
-    return false;
+        player.sendMessage("周囲の敵が消えました");
+        return;
+      }
+      world.spawnEntity(getEnemySpawnLocation(player, world), getEnemy());
+      player.sendMessage(getEnemy().name() + "が出現しました！");
+      nowPlayer.setGameTime(nowPlayer.getGameTime() -5 );
+    },0,5 * 20);
+    return true;
   }
 
-
+  @Override
+  public boolean onExecuteNPCCommand(CommandSender sender) {
+    return false;
+  }
 
   @EventHandler
   public void onEnemyDeath(EntityDeathEvent e){
