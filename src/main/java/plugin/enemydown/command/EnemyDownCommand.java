@@ -31,6 +31,7 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
   public static final int GAME_TIME = 20;
   private  Main main;
   private List<PlayerScore> playerScoreList = new ArrayList<>();
+  private List<Entity> spawnEntityList = new ArrayList<>();
 
   public EnemyDownCommand(Main main) {
     this.main =main;
@@ -96,30 +97,28 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
    * ゲームを実行します。基底の時間内に敵を倒すとスコアが加算されます。合計スコアを時間経過後に表示します。
    *
    * @param player  コマンドを実行したプレイヤー
-   * @param nowPlayer プレイヤースコア情報
+   * @param nowPlayerScore プレイヤースコア情報
    * @return
    */
 
-  private boolean gamePlay(Player player, PlayerScore nowPlayer) {
+  private boolean gamePlay(Player player, PlayerScore nowPlayerScore) {
     Bukkit.getScheduler().runTaskTimer(main,Runnable ->{
-      if(nowPlayer.getGameTime() <= 0) {
+      if(nowPlayerScore.getGameTime() <= 0) {
         Runnable.cancel();
+
         player.sendTitle("ゲームが終了しました。",
-            nowPlayer.getPlayerName() + " 合計 " + nowPlayer.getScore() + "点!",
+            nowPlayerScore.getPlayerName() + " 合計 " + nowPlayerScore.getScore() + "点!",
             0,100,0);
-        nowPlayer.setScore(0);
-        List<Entity> nearbyEnemies = player.getNearbyEntities(50, 50, 50);
-        for(Entity enemy: nearbyEnemies){
-          switch (enemy.getType()) {
-            case ZOMBIE, SKELETON, WITCH -> enemy.remove();
-          }
-        }
+
+        spawnEntityList.forEach(Entity::remove);
+
         player.sendMessage("周囲の敵が消えました");
         return;
       }
-      player.getWorld().spawnEntity(getEnemySpawnLocation(player, player.getWorld()), getEnemy());
-      player.sendMessage(getEnemy().name() + "が出現しました！");
-      nowPlayer.setGameTime(nowPlayer.getGameTime() -5 );
+      Entity spawnEntity = player.getWorld().spawnEntity(getEnemySpawnLocation(player, player.getWorld()), getEnemy());
+      spawnEntityList.add(spawnEntity);
+      player.sendMessage(spawnEntity.getName() + "が出現しました！");
+      nowPlayerScore.setGameTime(nowPlayerScore.getGameTime() -5 );
     },0,5 * 20);
     return true;
   }
@@ -135,8 +134,8 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
    */
   private Location getEnemySpawnLocation(Player player, World world) {
     Location playerLocation = player.getLocation();
-    int randomX = new SplittableRandom().nextInt(10) - 20;
-    int randomZ = new SplittableRandom().nextInt(10) - 20;
+    int randomX = new SplittableRandom().nextInt(5) - 10;
+    int randomZ = new SplittableRandom().nextInt(5) - 10;
 
     double x = playerLocation.getX() + randomX;
     double y = playerLocation.getY();
@@ -162,6 +161,8 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
           addNewPlayer(player)).orElse(playerScore);
     }
     playerScore.setGameTime(GAME_TIME);
+    playerScore.setScore(0);
+
     return playerScore;
   }
 
