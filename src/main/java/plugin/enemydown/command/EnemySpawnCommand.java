@@ -7,8 +7,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import plugin.enemydown.Main;
 
 public class EnemySpawnCommand extends BaseCommand implements Listener {
+
+  public Main main;
+  public EnemySpawnCommand(Main main) {this.main = main;}
 
   @Override
   public boolean onExecutePlayerCommand(Player player) {
@@ -29,8 +33,8 @@ public class EnemySpawnCommand extends BaseCommand implements Listener {
    */
   private Location getEnemySpawnLocation(Player player) {
     Location playerLocation = player.getLocation();
-    int randomX = new SplittableRandom().nextInt(20) - 10;
-    int randomZ = new SplittableRandom().nextInt(20) - 10;
+    int randomX = new SplittableRandom().nextInt(1) ;
+    int randomZ = new SplittableRandom().nextInt(1) ;
 
     double x = playerLocation.getX() + randomX;
     double y = playerLocation.getY();
@@ -48,5 +52,4 @@ public class EnemySpawnCommand extends BaseCommand implements Listener {
     List<EntityType> enemyList = List.of(EntityType.ZOMBIE, EntityType.SKELETON, EntityType.WITCH);
     return enemyList.get(new SplittableRandom().nextInt(enemyList.size()));
   }
-
 }
