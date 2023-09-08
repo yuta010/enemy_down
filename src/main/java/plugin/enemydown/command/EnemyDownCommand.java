@@ -34,12 +34,13 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
   private List<Entity> spawnEntityList = new ArrayList<>();
 
   public EnemyDownCommand(Main main) {
-    this.main =main;
+    this.main = main;
   }
 
 
   @Override
   public boolean onExecutePlayerCommand(Player player) {
+
     PlayerScore nowPlayerScore = getPlayerScore(player);
 
     nowPlayerScore.setGameTime(GAME_TIME);
@@ -59,22 +60,24 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
   public void onEnemyDeath(EntityDeathEvent e){
     LivingEntity enemy = e.getEntity();
     Player player = enemy.getKiller();
-    if (Objects.isNull(player) || playerScoreList.isEmpty()) {
+
+    if (Objects.isNull(player) || spawnEntityList.stream().noneMatch(entity -> entity.equals(enemy))) {
       return;
     }
 
-    for(PlayerScore playerScore : playerScoreList){
-      if (playerScore.getPlayerName().equals(player.getName())){
-        int point = switch (enemy.getType()) {
-          case ZOMBIE -> 10;
-          case SKELETON, WITCH -> 20;
-          default -> 0;
-        };
-        playerScore.setScore(playerScore.getScore() + point);
-        player.sendMessage("敵を倒した！現在のスコアは" + playerScore.getScore() + "点!");
+    playerScoreList.stream()
+        .filter(p -> p.getPlayerName().equals(player.getName()))
+        .findFirst()
+        .ifPresent(p -> {
+          int point = switch (enemy.getType()) {
+            case ZOMBIE -> 10;
+            case SKELETON, WITCH -> 20;
+            default -> 0;
+          };
+          p.setScore(p.getScore() + point);
+          player.sendMessage("敵を倒した！現在のスコアは" + p.getScore() + "点!");
+        });
       }
-    }
-    }
 
   /**
    * ゲームを始める前にプレイヤーんの状態を設定する。
@@ -96,9 +99,8 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
   /**
    * ゲームを実行します。基底の時間内に敵を倒すとスコアが加算されます。合計スコアを時間経過後に表示します。
    *
-   * @param player  コマンドを実行したプレイヤー
-   * @param nowPlayerScore プレイヤースコア情報
-   * @return
+   * @param player          コマンドを実行したプレイヤー
+   * @param nowPlayerScore  プレイヤースコア情報
    */
 
   private boolean gamePlay(Player player, PlayerScore nowPlayerScore) {
@@ -111,6 +113,7 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
             0,100,0);
 
         spawnEntityList.forEach(Entity::remove);
+        spawnEntityList = new ArrayList<>();
 
         player.sendMessage("周囲の敵が消えました");
         return;
@@ -125,7 +128,7 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
 
   /**
    * 敵の出現場所を取得します。
-   * 出現エリアはX軸とZ軸は自分の位置からプラス、ランダムで-10から9の値が設定されます。
+   * 出現エリアはX軸とZ軸は自分の位置からプラス、ランダムで-3から2の値が設定されます。
    * Y軸はプレイヤーと同じ位置になります。
    *
    * @param player　コマンドを実行したプレイヤー
@@ -134,8 +137,8 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
    */
   private Location getEnemySpawnLocation(Player player, World world) {
     Location playerLocation = player.getLocation();
-    int randomX = new SplittableRandom().nextInt(5) - 10;
-    int randomZ = new SplittableRandom().nextInt(5) - 10;
+    int randomX = new SplittableRandom().nextInt(3) - 6;
+    int randomZ = new SplittableRandom().nextInt(3) - 6;
 
     double x = playerLocation.getX() + randomX;
     double y = playerLocation.getY();
