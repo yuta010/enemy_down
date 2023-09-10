@@ -18,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffect;
 import plugin.enemydown.Data.PlayerScore;
 import plugin.enemydown.Main;
 
@@ -113,8 +114,9 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
             0,100,0);
 
         spawnEntityList.forEach(Entity::remove);
-        spawnEntityList = new ArrayList<>();
+        spawnEntityList.clear();
 
+        removePotionEffect(player);
         player.sendMessage("周囲の敵が消えました");
         return;
       }
@@ -165,6 +167,7 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
     }
     playerScore.setGameTime(GAME_TIME);
     playerScore.setScore(0);
+    removePotionEffect(player);
 
     return playerScore;
   }
@@ -187,5 +190,14 @@ public class EnemyDownCommand extends BaseCommand implements Listener {
   private EntityType getEnemy() {
     List<EntityType> enemyList =List.of(EntityType.ZOMBIE,EntityType.SKELETON,EntityType.WITCH);
     return enemyList.get(new SplittableRandom().nextInt(enemyList.size()));
+  }
+  /**
+   * プレイヤーに設定されている特殊効果を除外します。
+   * @param player　コマンドを実行したプレイヤー
+   */
+  private void removePotionEffect(Player player) {
+    player.getActivePotionEffects().stream()
+        .map(PotionEffect::getType)
+        .forEach(player::removePotionEffect);
   }
 }
